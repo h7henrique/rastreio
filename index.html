@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EasyOrder | Rastreio ao Vivo Pro</title>
-
+    <title>EasyOrder | Rastreio ao Vivo</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Oswald:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
+    
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -22,114 +22,163 @@
             --border: #262626;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         body { 
+            margin: 0; padding: 0; 
             font-family: 'Inter', sans-serif; 
             background: var(--bg); 
             color: var(--text); 
             display: flex; 
             flex-direction: column; 
             height: 100vh; 
-            height: -webkit-fill-available;
             overflow: hidden; 
         }
-
+        
+        /* HEADER PREMIUM */
         header { 
-            background: rgba(12, 12, 12, 0.95); 
+            background: rgba(12, 12, 12, 0.9); 
             backdrop-filter: blur(10px);
-            padding: env(safe-area-inset-top) 15px 12px; 
+            padding: 15px 20px; 
             text-align: center; 
             border-bottom: 1px solid var(--border); 
             z-index: 100;
-            flex-shrink: 0;
         }
-        
         .title { 
             font-family: 'Oswald', sans-serif; 
-            font-size: 1.1rem; 
-            letter-spacing: 1.5px; 
+            font-size: 1.2rem; 
+            letter-spacing: 2px; 
+            color: var(--text); 
+            margin: 0;
             text-transform: uppercase;
         }
 
+        /* STATUS BADGE */
+        .status-container {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
         .status-badge { 
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             background: var(--card); 
-            padding: 4px 12px; 
-            border-radius: 20px; 
+            color: var(--text); 
+            padding: 6px 16px; 
+            border-radius: 30px; 
             font-weight: 700; 
-            font-size: 0.75rem; 
+            font-size: 0.8rem; 
             border: 1px solid var(--border);
-            margin-top: 6px;
         }
-        
-        .status-badge.success { border-color: var(--success); color: var(--success); }
+        .status-badge i { color: var(--primary); }
+        .status-badge.success { border-color: var(--success); }
+        .status-badge.success i { color: var(--success); }
 
+        /* MAPA */
         #map-wrapper { flex: 1; position: relative; width: 100%; }
-        #map { width: 100%; height: 100%; z-index: 1; filter: grayscale(0.2) contrast(1.1); }
-
+        #map { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; filter: grayscale(0.2) contrast(1.1); }
+        
+        /* OVERLAY LOADING */
         #loading-overlay { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background: var(--bg); display: flex; justify-content: center; 
-            align-items: center; z-index: 150; transition: 0.6s ease; 
+            align-items: center; z-index: 150; transition: 0.8s ease; 
         }
 
+        /* CARD DO ENTREGADOR (FLOAT) */
         .footer-info { 
-            position: absolute; bottom: 20px; left: 10px; right: 10px;
-            max-width: 500px; margin: 0 auto;
-            background: var(--card); padding: 15px; z-index: 100; 
-            border-radius: 18 (px); border: 1px solid var(--border);
-            display: flex; align-items: center; gap: 12px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            position: absolute;
+            bottom: 25px;
+            left: 15px;
+            right: 15px;
+            background: var(--card); 
+            padding: 18px; 
+            z-index: 100; 
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
             animation: slideUp 0.5s ease-out;
         }
 
-        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
 
         .moto-icon-box { 
-            width: 48px; height: 48px; flex-shrink: 0;
-            background: var(--bg); border-radius: 14px; 
+            width: 54px; height: 54px; 
+            background: var(--bg); 
+            border-radius: 16px; 
             display: flex; justify-content: center; align-items: center; 
-            font-size: 1.2rem; color: var(--primary); border: 1px solid var(--border);
+            font-size: 1.4rem; color: var(--primary);
+            border: 1px solid var(--border);
             position: relative;
         }
 
-        .pulse { position: absolute; width: 100%; height: 100%; border-radius: 14px; border: 2px solid var(--primary); animation: pulsar 2s infinite; }
-        @keyframes pulsar { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(1.4); opacity: 0; } }
+        /* EFEITO PULSAR NO ÍCONE */
+        .pulse {
+            position: absolute;
+            width: 100%; height: 100%;
+            border-radius: 16px;
+            border: 2px solid var(--primary);
+            animation: pulsar 2s infinite;
+        }
 
-        .info-text { flex: 1; min-width: 0; }
-        .info-text h3 { margin: 0; font-size: 0.95rem; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .info-text p { margin: 1px 0 0; color: #999; font-size: 0.75rem; }
+        @keyframes pulsar {
+            0% { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(1.4); opacity: 0; }
+        }
 
-        .btn-call { width: 42px; height: 42px; flex-shrink: 0; border-radius: 50%; background: #25D366; display: flex; justify-content: center; align-items: center; color: white; text-decoration: none; font-size: 1.3rem; }
+        .info-text { flex: 1; }
+        .info-text h3 { margin: 0; font-size: 1rem; font-weight: 800; color: var(--text); }
+        .info-text p { margin: 2px 0 0; color: #999; font-size: 0.8rem; font-weight: 500; }
 
-        .loader { width: 30px; height: 30px; border: 3px solid #222; border-top: 3px solid var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        .btn-call {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: #222;
+            display: flex; justify-content: center; align-items: center;
+            color: white; text-decoration: none;
+            border: 1px solid var(--border);
+        }
+
+        /* LOADER */
+        .loader { 
+            width: 40px; height: 40px;
+            border: 3px solid #222; 
+            border-top: 3px solid var(--primary); 
+            border-radius: 50%; 
+            animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite; 
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
     <header>
-        <h1 class="title">EasyOrder <span style="color:var(--primary)">Live</span></h1>
-        <div class="status-badge" id="status-badge">
-            <i class="fa-solid fa-circle-notch fa-spin"></i> Conectando...
+        <h1 class="title">EasyOrder <span style="color:var(--primary)">Rastreio ao Vivo</span></h1>
+        <div class="status-container">
+            <div class="status-badge" id="status-badge">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Conectando...
+            </div>
         </div>
     </header>
 
     <div id="map-wrapper">
         <div id="loading-overlay"><div class="loader"></div></div>
         <div id="map"></div>
-
+        
         <div class="footer-info">
-            <div class="moto-icon-box">
+            <div class="moto-icon-box" id="moto-icon">
                 <div class="pulse"></div>
                 <i class="fa-solid fa-motorcycle"></i>
             </div>
             <div class="info-text">
-                <h3 id="eta-text">Calculando rota...</h3>
-                <p id="moto-nome">Aguardando GPS</p>
+                <h3 id="footer-title">Localizando...</h3>
+                <p id="moto-nome">Buscando dados do GPS</p>
             </div>
             <a href="#" id="link-zap" class="btn-call" style="display:none;"><i class="fa-brands fa-whatsapp"></i></a>
         </div>
@@ -140,84 +189,98 @@
         const supabaseKey = 'sb_publishable_xm_hnVYyfmh4mONa2Hy-7A_3M9M0ftf';
         const db = supabase.createClient(supabaseUrl, supabaseKey);
 
-        let map, marker;
-        let clientPos = [-23.5505, -46.6333]; // Fallback: SP
-
+        let map = null;
+        let marker = null;
+        
         const iconMoto = L.divIcon({
-            html: '<div style="background:#EA1D2C; border:2px solid white; border-radius:50%; width:34px; height:34px; display:flex; justify-content:center; align-items:center; box-shadow:0 0 15px rgba(234, 29, 44, 0.6)"><i class="fa-solid fa-motorcycle" style="color:white; font-size:14px"></i></div>',
-            className: 'moto-marker', iconSize: [34, 34], iconAnchor: [17, 17]
+            html: '<div style="background:#EA1D2C; border:2px solid white; border-radius:50%; width:36px; height:36px; display:flex; justify-content:center; align-items:center; box-shadow:0 0 20px rgba(234, 29, 44, 0.6)"><i class="fa-solid fa-motorcycle" style="color:white; font-size:16px"></i></div>',
+            className: '', iconSize: [36, 36], iconAnchor: [18, 18]
         });
 
-        // FUNÇÃO PARA CALCULAR TEMPO ESTIMADO (ETA)
-        async function updateETA(motoLat, motoLng) {
-            try {
-                // Usando a API gratuita do OSRM para calcular tempo de percurso (perfil de carro/moto)
-                const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${motoLng},${motoLat};${clientPos[1]},${clientPos[0]}?overview=false`);
-                const data = await res.json();
-                
-                if (data.routes && data.routes[0]) {
-                    const durationMin = Math.round(data.routes[0].duration / 60);
-                    const distanceKm = (data.routes[0].distance / 1000).toFixed(1);
-                    document.getElementById('eta-text').innerText = `Chega em ~${durationMin + 2} min (${distanceKm} km)`;
-                }
-            } catch (e) {
-                document.getElementById('eta-text').innerText = "Em trânsito...";
+        const ui = {
+            setBadge: (html, type = 'normal') => {
+                const el = document.getElementById('status-badge');
+                el.innerHTML = html;
+                el.className = 'status-badge ' + (type === 'success' ? 'success' : '');
+            },
+            hideLoading: () => {
+                const loader = document.getElementById('loading-overlay');
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 800);
             }
-        }
+        };
 
         async function initTracking() {
             try {
                 const urlParams = new URLSearchParams(window.location.search);
                 const pedidoId = urlParams.get('pedido');
-                if(!pedidoId) throw new Error('Link Inválido');
-
-                const { data: pedido } = await db.from('pedidos').select('*').eq('id', pedidoId).single();
                 
-                // Pegar posição do cliente do pedido (Se houver no DB)
-                if(pedido.lat_cliente) clientPos = [pedido.lat_cliente, pedido.lng_cliente];
+                if(!pedidoId) throw new Error('Pedido não informado');
 
+                const { data: pedido, error: errP } = await db.from('pedidos').select('*').eq('id', pedidoId).single();
+                if(errP || !pedido) throw new Error('Pedido inexistente');
+
+                // 1. Caso entregue
                 if(pedido.status === 'entregue') {
-                    document.getElementById('status-badge').innerHTML = 'Entrega Concluída';
-                    document.getElementById('eta-text').innerText = "Pedido Entregue!";
-                    document.getElementById('loading-overlay').style.display = 'none';
+                    ui.setBadge('<i class="fa-solid fa-check-double"></i> Entrega Concluída', 'success');
+                    document.getElementById('footer-title').innerText = "Pedido Entregue";
+                    document.getElementById('moto-nome').innerText = "Obrigado pela preferência!";
+                    ui.hideLoading();
                     return;
                 }
 
-                const { data: moto } = await db.from('entregadores').select('*').eq('id', pedido.entregador_id).single();
-
-                document.getElementById('loading-overlay').style.opacity = '0';
-                setTimeout(() => document.getElementById('loading-overlay').style.display = 'none', 600);
-                
-                document.getElementById('status-badge').innerText = "Em Entrega";
-                document.getElementById('status-badge').classList.add('success');
-                document.getElementById('moto-nome').innerText = `Entregador: ${moto.nome}`;
-
-                if(moto.zap) {
-                    const btn = document.getElementById('link-zap');
-                    btn.href = `https://wa.me/55${moto.zap.replace(/\D/g,'')}`;
-                    btn.style.display = 'flex';
+                // 2. Caso ainda na cozinha ou sem entregador
+                if(!pedido.entregador_id || pedido.status === 'pendente' || pedido.status === 'preparando') {
+                    ui.setBadge('<i class="fa-solid fa-utensils"></i> No fogão');
+                    document.getElementById('footer-title').innerText = "Preparando seu lanche";
+                    document.getElementById('moto-nome').innerText = "Aguardando saída para entrega.";
+                    ui.hideLoading();
+                    return;
                 }
 
-                // Iniciar Mapa
-                map = L.map('map', { zoomControl: false }).setView([moto.lat, moto.lng], 16);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+                // 3. Em rota - Pegar dados do motoboy
+                const { data: moto } = await db.from('entregadores').select('*').eq('id', pedido.entregador_id).single();
                 
-                marker = L.marker([moto.lat, moto.lng], {icon: iconMoto}).addTo(map);
-                updateETA(moto.lat, moto.lng);
+                ui.hideLoading();
+                ui.setBadge('<i class="fa-solid fa-bolt"></i> Saiu para entrega', 'success');
+                document.getElementById('footer-title').innerText = "O motoboy está a caminho!";
+                document.getElementById('moto-nome').innerText = `Entregador: ${moto.nome}`;
+                
+                // Botão de Whatsapp se houver
+                if(moto.zap) {
+                    const btnZap = document.getElementById('link-zap');
+                    btnZap.href = `https://wa.me/55${moto.zap.replace(/\D/g,'')}`;
+                    btnZap.style.display = 'flex';
+                }
 
-                // REALTIME
-                db.channel('live').on('postgres_changes', { 
+                // Iniciar MAPA com estilo DARK
+                map = L.map('map', { zoomControl: false }).setView([moto.lat || -23.55, moto.lng || -46.63], 16);
+                
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; CartoDB'
+                }).addTo(map);
+
+                if(moto.lat) {
+                    marker = L.marker([moto.lat, moto.lng], {icon: iconMoto}).addTo(map);
+                }
+
+                // ESCUTAR MOVIMENTO EM TEMPO REAL
+                db.channel('live-track').on('postgres_changes', { 
                     event: 'UPDATE', schema: 'public', table: 'entregadores', filter: `id=eq.${moto.id}` 
                 }, payload => {
                     const { lat, lng } = payload.new;
-                    marker.setLatLng([lat, lng]);
-                    map.panTo([lat, lng], { animate: true, duration: 2 });
-                    updateETA(lat, lng);
+                    if(lat && lng) {
+                        if(!marker) marker = L.marker([lat, lng], {icon: iconMoto}).addTo(map);
+                        else marker.setLatLng([lat, lng]);
+                        map.panTo([lat, lng], { animate: true, duration: 1.5 });
+                    }
                 }).subscribe();
 
             } catch (e) {
-                document.getElementById('eta-text').innerText = "Erro ao carregar";
-                document.getElementById('loading-overlay').style.display = 'none';
+                ui.setBadge('<i class="fa-solid fa-circle-exclamation"></i> Erro no rastreio');
+                document.getElementById('footer-title').innerText = "Erro ao carregar";
+                document.getElementById('moto-nome').innerText = e.message;
+                ui.hideLoading();
             }
         }
 
@@ -225,6 +288,5 @@
     </script>
 </body>
 </html>
-</body>
 
 </html>
