@@ -1,165 +1,389 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EasyOrder | Rastreio ao Vivo</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Oswald:wght@700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Rastreio EasyOrder </title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Oswald:wght@700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        :root { 
-            --bg: #0C0C0C; 
+        :root {
+            --bg: #0C0C0C;
             --card: #161616;
-            --primary: #EA1D2C; 
-            --text: #FFFFFF; 
-            --success: #10B981; 
+            --primary: #EA1D2C;
+            --text: #FFFFFF;
+            --success: #10B981;
             --border: #262626;
+            --muted: #999999;
+            --header-h: 96px;
+            --card-max: 860px;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
         }
 
-        body { 
-            margin: 0; padding: 0; 
-            font-family: 'Inter', sans-serif; 
-            background: var(--bg); 
-            color: var(--text); 
-            display: flex; 
-            flex-direction: column; 
-            height: 100vh; 
-            overflow: hidden; 
+        * {
+            box-sizing: border-box;
         }
-        
-        /* HEADER PREMIUM */
-        header { 
-            background: rgba(12, 12, 12, 0.9); 
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        header {
+            position: relative;
+            z-index: 120;
+            min-height: var(--header-h);
+            background: rgba(12, 12, 12, 0.92);
             backdrop-filter: blur(10px);
-            padding: 15px 20px; 
-            text-align: center; 
-            border-bottom: 1px solid var(--border); 
-            z-index: 100;
+            border-bottom: 1px solid var(--border);
+            padding: 14px 16px 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
         }
-        .title { 
-            font-family: 'Oswald', sans-serif; 
-            font-size: 1.2rem; 
-            letter-spacing: 2px; 
-            color: var(--text); 
+
+        .title {
+            font-family: 'Oswald', sans-serif;
+            font-size: clamp(1rem, 1.8vw, 1.3rem);
+            letter-spacing: 1.5px;
+            color: var(--text);
             margin: 0;
             text-transform: uppercase;
+            line-height: 1.1;
         }
 
-        /* STATUS BADGE */
         .status-container {
             margin-top: 8px;
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            justify-content: center;
+            width: 100%;
         }
-        .status-badge { 
+
+        .status-badge {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
-            background: var(--card); 
-            color: var(--text); 
-            padding: 6px 16px; 
-            border-radius: 30px; 
-            font-weight: 700; 
-            font-size: 0.8rem; 
+            background: var(--card);
+            color: var(--text);
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: clamp(0.72rem, 2.4vw, 0.85rem);
             border: 1px solid var(--border);
-        }
-        .status-badge i { color: var(--primary); }
-        .status-badge.success { border-color: var(--success); }
-        .status-badge.success i { color: var(--success); }
-
-        /* MAPA */
-        #map-wrapper { flex: 1; position: relative; width: 100%; }
-        #map { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; filter: grayscale(0.2) contrast(1.1); }
-        
-        /* OVERLAY LOADING */
-        #loading-overlay { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: var(--bg); display: flex; justify-content: center; 
-            align-items: center; z-index: 150; transition: 0.8s ease; 
+            text-align: center;
+            max-width: min(92vw, 420px);
+            line-height: 1.2;
+            flex-wrap: wrap;
         }
 
-        /* CARD DO ENTREGADOR (FLOAT) */
-        .footer-info { 
+        .status-badge i {
+            color: var(--primary);
+        }
+
+        .status-badge.success {
+            border-color: var(--success);
+        }
+
+        .status-badge.success i {
+            color: var(--success);
+        }
+
+        #map-wrapper {
+            position: relative;
+            width: 100%;
+            height: calc(100dvh - var(--header-h));
+            min-height: 320px;
+            overflow: hidden;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
             position: absolute;
-            bottom: 25px;
-            left: 15px;
-            right: 15px;
-            background: var(--card); 
-            padding: 18px; 
-            z-index: 100; 
-            border-radius: 20px;
+            inset: 0;
+            z-index: 1;
+            filter: grayscale(0.2) contrast(1.05);
+        }
+
+        #loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 150;
+            transition: opacity 0.8s ease;
+        }
+
+        .footer-shell {
+            position: absolute;
+            left: 12px;
+            right: 12px;
+            bottom: calc(12px + var(--safe-bottom));
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .footer-info {
+            width: 100%;
+            max-width: var(--card-max);
+            background: rgba(22, 22, 22, 0.96);
             border: 1px solid var(--border);
-            display: flex; 
-            align-items: center; 
-            gap: 15px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
-            animation: slideUp 0.5s ease-out;
+            border-radius: 18px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.55);
+            animation: slideUp 0.45s ease-out;
+            pointer-events: auto;
         }
 
         @keyframes slideUp {
-            from { transform: translateY(100px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(80px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
-        .moto-icon-box { 
-            width: 54px; height: 54px; 
-            background: var(--bg); 
-            border-radius: 16px; 
-            display: flex; justify-content: center; align-items: center; 
-            font-size: 1.4rem; color: var(--primary);
+        .moto-icon-box {
+            width: 52px;
+            height: 52px;
+            min-width: 52px;
+            background: var(--bg);
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.25rem;
+            color: var(--primary);
             border: 1px solid var(--border);
             position: relative;
+            overflow: hidden;
         }
 
-        /* EFEITO PULSAR NO ÍCONE */
         .pulse {
             position: absolute;
-            width: 100%; height: 100%;
+            width: 100%;
+            height: 100%;
             border-radius: 16px;
             border: 2px solid var(--primary);
             animation: pulsar 2s infinite;
         }
 
         @keyframes pulsar {
-            0% { transform: scale(1); opacity: 0.5; }
-            100% { transform: scale(1.4); opacity: 0; }
+            0% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scale(1.4);
+                opacity: 0;
+            }
         }
 
-        .info-text { flex: 1; }
-        .info-text h3 { margin: 0; font-size: 1rem; font-weight: 800; color: var(--text); }
-        .info-text p { margin: 2px 0 0; color: #999; font-size: 0.8rem; font-weight: 500; }
+        .info-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .info-text h3 {
+            margin: 0;
+            font-size: clamp(0.92rem, 3vw, 1.05rem);
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1.2;
+            word-break: break-word;
+        }
+
+        .info-text p {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: clamp(0.74rem, 2.6vw, 0.88rem);
+            font-weight: 500;
+            line-height: 1.35;
+            word-break: break-word;
+        }
 
         .btn-call {
-            width: 40px; height: 40px;
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
             border-radius: 50%;
             background: #222;
-            display: flex; justify-content: center; align-items: center;
-            color: white; text-decoration: none;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            text-decoration: none;
             border: 1px solid var(--border);
+            transition: transform 0.2s ease, background 0.2s ease;
         }
 
-        /* LOADER */
-        .loader { 
-            width: 40px; height: 40px;
-            border: 3px solid #222; 
-            border-top: 3px solid var(--primary); 
-            border-radius: 50%; 
-            animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite; 
+        .btn-call:active {
+            transform: scale(0.96);
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .btn-call:hover {
+            background: #2b2b2b;
+        }
+
+        .loader {
+            width: 42px;
+            height: 42px;
+            border: 3px solid #222;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* TABLETS */
+        @media (min-width: 768px) {
+            :root {
+                --header-h: 104px;
+            }
+
+            header {
+                padding: 16px 20px 14px;
+            }
+
+            .footer-shell {
+                left: 20px;
+                right: 20px;
+                bottom: 20px;
+            }
+
+            .footer-info {
+                padding: 16px 18px;
+                gap: 14px;
+            }
+
+            .moto-icon-box {
+                width: 56px;
+                height: 56px;
+                min-width: 56px;
+                font-size: 1.35rem;
+            }
+
+            .btn-call {
+                width: 46px;
+                height: 46px;
+                min-width: 46px;
+            }
+        }
+
+        /* CELULARES PEQUENOS */
+        @media (max-width: 480px) {
+            :root {
+                --header-h: 92px;
+            }
+
+            header {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+
+            .status-badge {
+                padding: 7px 12px;
+                max-width: 94vw;
+            }
+
+            .footer-shell {
+                left: 10px;
+                right: 10px;
+                bottom: calc(10px + var(--safe-bottom));
+            }
+
+            .footer-info {
+                padding: 12px;
+                gap: 10px;
+                border-radius: 16px;
+            }
+
+            .moto-icon-box {
+                width: 48px;
+                height: 48px;
+                min-width: 48px;
+                border-radius: 14px;
+            }
+
+            .pulse {
+                border-radius: 14px;
+            }
+
+            .btn-call {
+                width: 42px;
+                height: 42px;
+                min-width: 42px;
+            }
+        }
+
+        /* QUANDO A ALTURA FOR MUITO BAIXA */
+        @media (max-height: 620px) {
+            :root {
+                --header-h: 82px;
+            }
+
+            header {
+                padding-top: 10px;
+                padding-bottom: 10px;
+            }
+
+            .status-container {
+                margin-top: 6px;
+            }
+
+            .footer-info {
+                padding: 12px;
+            }
+        }
     </style>
 </head>
+
 <body>
 
     <header>
-        <h1 class="title">EasyOrder <span style="color:var(--primary)">Rastreio ao Vivo</span></h1>
+        <h1 class="title">EasyOrder <span style="color:var(--primary)">Live</span></h1>
         <div class="status-container">
             <div class="status-badge" id="status-badge">
                 <i class="fa-solid fa-circle-notch fa-spin"></i> Conectando...
@@ -168,19 +392,28 @@
     </header>
 
     <div id="map-wrapper">
-        <div id="loading-overlay"><div class="loader"></div></div>
+        <div id="loading-overlay">
+            <div class="loader"></div>
+        </div>
+
         <div id="map"></div>
-        
-        <div class="footer-info">
-            <div class="moto-icon-box" id="moto-icon">
-                <div class="pulse"></div>
-                <i class="fa-solid fa-motorcycle"></i>
+
+        <div class="footer-shell">
+            <div class="footer-info">
+                <div class="moto-icon-box" id="moto-icon">
+                    <div class="pulse"></div>
+                    <i class="fa-solid fa-motorcycle"></i>
+                </div>
+
+                <div class="info-text">
+                    <h3 id="footer-title">Localizando...</h3>
+                    <p id="moto-nome">Buscando dados do GPS</p>
+                </div>
+
+                <a href="#" id="link-zap" class="btn-call" aria-label="Falar no WhatsApp">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </a>
             </div>
-            <div class="info-text">
-                <h3 id="footer-title">Localizando...</h3>
-                <p id="moto-nome">Buscando dados do GPS</p>
-            </div>
-            <a href="#" id="link-zap" class="btn-call" style="display:none;"><i class="fa-brands fa-whatsapp"></i></a>
         </div>
     </div>
 
@@ -191,10 +424,26 @@
 
         let map = null;
         let marker = null;
-        
+
         const iconMoto = L.divIcon({
-            html: '<div style="background:#EA1D2C; border:2px solid white; border-radius:50%; width:36px; height:36px; display:flex; justify-content:center; align-items:center; box-shadow:0 0 20px rgba(234, 29, 44, 0.6)"><i class="fa-solid fa-motorcycle" style="color:white; font-size:16px"></i></div>',
-            className: '', iconSize: [36, 36], iconAnchor: [18, 18]
+            html: `
+                <div style="
+                    background:#EA1D2C;
+                    border:2px solid white;
+                    border-radius:50%;
+                    width:36px;
+                    height:36px;
+                    display:flex;
+                    justify-content:center;
+                    align-items:center;
+                    box-shadow:0 0 20px rgba(234, 29, 44, 0.6)
+                ">
+                    <i class="fa-solid fa-motorcycle" style="color:white; font-size:16px"></i>
+                </div>
+            `,
+            className: '',
+            iconSize: [36, 36],
+            iconAnchor: [18, 18]
         });
 
         const ui = {
@@ -206,7 +455,12 @@
             hideLoading: () => {
                 const loader = document.getElementById('loading-overlay');
                 loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 800);
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    if (map) {
+                        setTimeout(() => map.invalidateSize(), 150);
+                    }
+                }, 800);
             }
         };
 
@@ -214,79 +468,108 @@
             try {
                 const urlParams = new URLSearchParams(window.location.search);
                 const pedidoId = urlParams.get('pedido');
-                
-                if(!pedidoId) throw new Error('Pedido não informado');
 
-                const { data: pedido, error: errP } = await db.from('pedidos').select('*').eq('id', pedidoId).single();
-                if(errP || !pedido) throw new Error('Pedido inexistente');
+                if (!pedidoId) throw new Error('Pedido não informado');
 
-                // 1. Caso entregue
-                if(pedido.status === 'entregue') {
+                const { data: pedido, error: errP } = await db
+                    .from('pedidos')
+                    .select('*')
+                    .eq('id', pedidoId)
+                    .single();
+
+                if (errP || !pedido) throw new Error('Pedido inexistente');
+
+                if (pedido.status === 'entregue') {
                     ui.setBadge('<i class="fa-solid fa-check-double"></i> Entrega Concluída', 'success');
-                    document.getElementById('footer-title').innerText = "Pedido Entregue";
-                    document.getElementById('moto-nome').innerText = "Obrigado pela preferência!";
+                    document.getElementById('footer-title').innerText = 'Pedido Entregue';
+                    document.getElementById('moto-nome').innerText = 'Obrigado pela preferência!';
                     ui.hideLoading();
                     return;
                 }
 
-                // 2. Caso ainda na cozinha ou sem entregador
-                if(!pedido.entregador_id || pedido.status === 'pendente' || pedido.status === 'preparando') {
+                if (!pedido.entregador_id || pedido.status === 'pendente' || pedido.status === 'preparando') {
                     ui.setBadge('<i class="fa-solid fa-utensils"></i> No fogão');
-                    document.getElementById('footer-title').innerText = "Preparando seu lanche";
-                    document.getElementById('moto-nome').innerText = "Aguardando saída para entrega.";
+                    document.getElementById('footer-title').innerText = 'Preparando seu lanche';
+                    document.getElementById('moto-nome').innerText = 'Aguardando saída para entrega.';
                     ui.hideLoading();
                     return;
                 }
 
-                // 3. Em rota - Pegar dados do motoboy
-                const { data: moto } = await db.from('entregadores').select('*').eq('id', pedido.entregador_id).single();
-                
+                const { data: moto } = await db
+                    .from('entregadores')
+                    .select('*')
+                    .eq('id', pedido.entregador_id)
+                    .single();
+
                 ui.hideLoading();
                 ui.setBadge('<i class="fa-solid fa-bolt"></i> Saiu para entrega', 'success');
-                document.getElementById('footer-title').innerText = "O motoboy está a caminho!";
+                document.getElementById('footer-title').innerText = 'O motoboy está a caminho!';
                 document.getElementById('moto-nome').innerText = `Entregador: ${moto.nome}`;
-                
-                // Botão de Whatsapp se houver
-                if(moto.zap) {
+
+                if (moto.zap) {
                     const btnZap = document.getElementById('link-zap');
-                    btnZap.href = `https://wa.me/55${moto.zap.replace(/\D/g,'')}`;
+                    btnZap.href = `https://wa.me/55${moto.zap.replace(/\D/g, '')}`;
                     btnZap.style.display = 'flex';
                 }
 
-                // Iniciar MAPA com estilo DARK
-                map = L.map('map', { zoomControl: false }).setView([moto.lat || -23.55, moto.lng || -46.63], 16);
-                
+                map = L.map('map', { zoomControl: false }).setView(
+                    [moto.lat || -23.55, moto.lng || -46.63],
+                    16
+                );
+
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                     attribution: '&copy; CartoDB'
                 }).addTo(map);
 
-                if(moto.lat) {
-                    marker = L.marker([moto.lat, moto.lng], {icon: iconMoto}).addTo(map);
+                if (moto.lat && moto.lng) {
+                    marker = L.marker([moto.lat, moto.lng], { icon: iconMoto }).addTo(map);
                 }
 
-                // ESCUTAR MOVIMENTO EM TEMPO REAL
-                db.channel('live-track').on('postgres_changes', { 
-                    event: 'UPDATE', schema: 'public', table: 'entregadores', filter: `id=eq.${moto.id}` 
-                }, payload => {
-                    const { lat, lng } = payload.new;
-                    if(lat && lng) {
-                        if(!marker) marker = L.marker([lat, lng], {icon: iconMoto}).addTo(map);
-                        else marker.setLatLng([lat, lng]);
-                        map.panTo([lat, lng], { animate: true, duration: 1.5 });
-                    }
-                }).subscribe();
+                setTimeout(() => map.invalidateSize(), 200);
+
+                db.channel('live-track')
+                    .on('postgres_changes', {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'entregadores',
+                        filter: `id=eq.${moto.id}`
+                    }, payload => {
+                        const { lat, lng } = payload.new;
+                        if (lat && lng) {
+                            if (!marker) {
+                                marker = L.marker([lat, lng], { icon: iconMoto }).addTo(map);
+                            } else {
+                                marker.setLatLng([lat, lng]);
+                            }
+
+                            map.panTo([lat, lng], {
+                                animate: true,
+                                duration: 1.5
+                            });
+                        }
+                    })
+                    .subscribe();
 
             } catch (e) {
                 ui.setBadge('<i class="fa-solid fa-circle-exclamation"></i> Erro no rastreio');
-                document.getElementById('footer-title').innerText = "Erro ao carregar";
+                document.getElementById('footer-title').innerText = 'Erro ao carregar';
                 document.getElementById('moto-nome').innerText = e.message;
                 ui.hideLoading();
             }
         }
 
-        window.onload = initTracking;
+        window.addEventListener('load', initTracking);
+        window.addEventListener('resize', () => {
+            if (map) {
+                setTimeout(() => map.invalidateSize(), 120);
+            }
+        });
+        window.addEventListener('orientationchange', () => {
+            if (map) {
+                setTimeout(() => map.invalidateSize(), 200);
+            }
+        });
     </script>
 </body>
-</html>
 
 </html>
