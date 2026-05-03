@@ -217,19 +217,7 @@
       padding:12px;
       min-width:0;
     }
-.sheet {
-  transition: all 0.3s ease;
-}
 
-/* estado fechado */
-.sheet.minimized {
-  transform: translateY(60%);
-}
-
-/* estado aberto */
-.sheet.expanded {
-  transform: translateY(0);
-}
     .detail-card small {
       display:block;
       color:var(--muted);
@@ -308,6 +296,48 @@
       50% { transform:translateY(-4px); }
     }
 
+
+    .sheet {
+      transition: transform 0.32s cubic-bezier(.22, 1, .36, 1);
+    }
+
+    .sheet.minimized {
+      transform: translateY(58%);
+    }
+
+    .sheet.expanded {
+      transform: translateY(0);
+    }
+
+    .card-toggle {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 10px;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: all 0.25s ease;
+    }
+
+    .card-toggle i {
+      color: #fff;
+      font-size: 14px;
+      transition: transform 0.3s ease;
+    }
+
+    .card-toggle:active {
+      transform: scale(0.92);
+    }
+
+    .sheet.expanded .card-toggle i {
+      transform: rotate(180deg);
+    }
+
     @media(max-width:700px) {
       header { padding:12px 12px 10px; }
       .logo { width:42px; height:42px; border-radius:14px; }
@@ -364,26 +394,14 @@
       </div>
 
       <div class="sheet-wrap">
-        <section class="sheet">
+        <section class="sheet expanded">
           <div class="grab"></div>
+          <div class="card-toggle" id="toggle-card"><i class="fa-solid fa-chevron-down"></i></div>
           <div class="sheet-content">
             <div class="status-row">
               <div class="status-title">
                 <h2 id="status-title">Carregando pedido...</h2>
                 <p id="status-desc">Estamos buscando os dados do seu pedido.</p>
-                <div style="display:flex;justify-content:center;margin-bottom:8px;">
-  <button id="toggle-card" style="
-    background:#222;
-    border:none;
-    color:white;
-    padding:6px 12px;
-    border-radius:20px;
-    font-size:12px;
-    cursor:pointer;
-  ">
-    ▲ Expandir
-  </button>
-</div>
               </div>
               <div class="status-icon" id="status-icon">
                 <i class="fa-solid fa-circle-notch fa-spin"></i>
@@ -445,24 +463,6 @@
   </div>
 
   <script>
-    const sheet = document.querySelector('.sheet');
-const btn = document.getElementById('toggle-card');
-
-let expanded = true;
-
-btn.addEventListener('click', () => {
-  expanded = !expanded;
-
-  if (expanded) {
-    sheet.classList.remove('minimized');
-    sheet.classList.add('expanded');
-    btn.innerText = '▼ Recolher';
-  } else {
-    sheet.classList.remove('expanded');
-    sheet.classList.add('minimized');
-    btn.innerText = '▲ Expandir';
-  }
-});
     const supabaseUrl = 'https://tyokrmmtluixdosmmygf.supabase.co';
     const supabaseKey = 'sb_publishable_xm_hnVYyfmh4mONa2Hy-7A_3M9M0ftf';
     const db = supabase.createClient(supabaseUrl, supabaseKey);
@@ -694,7 +694,22 @@ btn.addEventListener('click', () => {
       hideLoading();
     }
 
-    window.addEventListener('load', init);
+
+    function initCardToggle() {
+      const sheet = document.querySelector('.sheet');
+      const toggle = document.getElementById('toggle-card');
+      if (!sheet || !toggle) return;
+
+      let expanded = true;
+
+      toggle.addEventListener('click', () => {
+        expanded = !expanded;
+        sheet.classList.toggle('expanded', expanded);
+        sheet.classList.toggle('minimized', !expanded);
+      });
+    }
+
+    window.addEventListener('load', () => { initCardToggle(); init(); });
     window.addEventListener('resize', () => {
       if (map) setTimeout(() => map.invalidateSize(), 100);
     });
