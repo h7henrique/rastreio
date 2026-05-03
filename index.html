@@ -217,7 +217,19 @@
       padding:12px;
       min-width:0;
     }
+.sheet {
+  transition: all 0.3s ease;
+}
 
+/* estado fechado */
+.sheet.minimized {
+  transform: translateY(60%);
+}
+
+/* estado aberto */
+.sheet.expanded {
+  transform: translateY(0);
+}
     .detail-card small {
       display:block;
       color:var(--muted);
@@ -359,6 +371,19 @@
               <div class="status-title">
                 <h2 id="status-title">Carregando pedido...</h2>
                 <p id="status-desc">Estamos buscando os dados do seu pedido.</p>
+                <div style="display:flex;justify-content:center;margin-bottom:8px;">
+  <button id="toggle-card" style="
+    background:#222;
+    border:none;
+    color:white;
+    padding:6px 12px;
+    border-radius:20px;
+    font-size:12px;
+    cursor:pointer;
+  ">
+    ▲ Expandir
+  </button>
+</div>
               </div>
               <div class="status-icon" id="status-icon">
                 <i class="fa-solid fa-circle-notch fa-spin"></i>
@@ -420,6 +445,24 @@
   </div>
 
   <script>
+    const sheet = document.querySelector('.sheet');
+const btn = document.getElementById('toggle-card');
+
+let expanded = true;
+
+btn.addEventListener('click', () => {
+  expanded = !expanded;
+
+  if (expanded) {
+    sheet.classList.remove('minimized');
+    sheet.classList.add('expanded');
+    btn.innerText = '▼ Recolher';
+  } else {
+    sheet.classList.remove('expanded');
+    sheet.classList.add('minimized');
+    btn.innerText = '▲ Expandir';
+  }
+});
     const supabaseUrl = 'https://tyokrmmtluixdosmmygf.supabase.co';
     const supabaseKey = 'sb_publishable_xm_hnVYyfmh4mONa2Hy-7A_3M9M0ftf';
     const db = supabase.createClient(supabaseUrl, supabaseKey);
